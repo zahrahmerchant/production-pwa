@@ -26,14 +26,38 @@
     </section>
 
     <section>
-        <label>Start Time</label>
-        <input type="time" id="startTime">
+        <h3>Time Worked</h3>
 
-        <label>End Time</label>
-        <input type="time" id="endTime">
+        <!-- START TIME -->
+        <div class="time-row">
+            <span>Start Time</span>
+            <button onclick="changeHour('start', -1)">−</button>
+            <span id="startHour" class="time-box">8</span>
+            <button onclick="changeHour('start', 1)">+</button>
 
-        <p>Duration: <span id="duration">0</span> mins</p>
+            <button onclick="togglePeriod('start')" id="startPeriod" class="period-btn">
+                AM
+            </button>
+        </div>
+
+        <!-- END TIME -->
+        <div class="time-row">
+            <span>End Time</span>
+            <button onclick="changeHour('end', -1)">−</button>
+            <span id="endHour" class="time-box">2</span>
+            <button onclick="changeHour('end', 1)">+</button>
+
+            <button onclick="togglePeriod('end')" id="endPeriod" class="period-btn">
+                PM
+            </button>
+        </div>
+
+        <!-- DURATION -->
+        <p class="duration">
+            Duration: <strong><span id="duration">6</span> hrs</strong>
+        </p>
     </section>
+
 
     <section>
         <h3>Operator</h3>
