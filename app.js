@@ -52,7 +52,15 @@ function select(type, value) {
 
 function changeQty(delta) {
     const input = document.getElementById("qtyInput");
-    input.value = Math.max(0, parseInt(input.value || 0) + delta);
+    let newValue = Math.max(0, parseInt(input.value || 0) + delta);
+    input.value = newValue;
+    updateQty();
+}
+
+function updateQty() {
+    const input = document.getElementById("qtyInput");
+    state.qty = Math.max(0, parseInt(input.value || 0));
+    input.value = state.qty;
 }
 
 
@@ -62,6 +70,28 @@ function save() {
     alert("Saved ✓ (prototype)");
     reset();
 }
+
+// Autofill today's date on load and wire up simple listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const dateEl = document.getElementById('date');
+    if (dateEl && !dateEl.value) {
+        const today = new Date().toISOString().slice(0, 10);
+        dateEl.value = today;
+    }
+
+    // ensure qty and hours reflect state
+    updateQty();
+    const startEl = document.getElementById('startHour');
+    const endEl = document.getElementById('endHour');
+    if (startEl) startEl.value = startHour;
+    if (endEl) endEl.value = endHour;
+
+    // remove inline error when user interacts
+    document.querySelectorAll('input, button, .scroll-grid').forEach(el => {
+        el.addEventListener('input', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); });
+        el.addEventListener('click', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); });
+    });
+});
 
 function reset() {
     // Clear state
@@ -85,8 +115,10 @@ function reset() {
     endHour = 6;
     startPeriod = "AM";
     endPeriod = "PM";
-    document.getElementById("startHour").innerText = "6";
-    document.getElementById("endHour").innerText = "6";
+    const startEl = document.getElementById("startHour");
+    const endEl = document.getElementById("endHour");
+    if (startEl) startEl.value = "6";
+    if (endEl) endEl.value = "6";
     document.getElementById("startPeriod").innerText = "AM";
     document.getElementById("endPeriod").innerText = "PM";
     calculateDuration();
@@ -113,11 +145,25 @@ function normalizeHour(h) {
 function changeHour(type, delta) {
     if (type === "start") {
         startHour = normalizeHour(startHour + delta);
-        document.getElementById("startHour").innerText = startHour;
+        const el = document.getElementById("startHour");
+        if (el) el.value = startHour;
     } else {
         endHour = normalizeHour(endHour + delta);
-        document.getElementById("endHour").innerText = endHour;
+        const el = document.getElementById("endHour");
+        if (el) el.value = endHour;
     }
+    calculateDuration();
+}
+
+function updateHour(type) {
+    const id = type === 'start' ? 'startHour' : 'endHour';
+    const el = document.getElementById(id);
+    if (!el) return;
+    let v = parseInt(el.value);
+    if (isNaN(v)) v = type === 'start' ? startHour : endHour;
+    v = Math.max(1, Math.min(12, v));
+    el.value = v;
+    if (type === 'start') startHour = v; else endHour = v;
     calculateDuration();
 }
 
@@ -148,44 +194,79 @@ function calculateDuration() {
 }
 
 function validateForm() {
-    const date = document.getElementById("date").value;
-    const jobCardNo = document.getElementById("jobCardNo").value;
-    const description = document.getElementById("description").value;
+    clearValidation();
 
-    const errors = [];
+    const dateEl = document.getElementById("date");
+    const jobCardEl = document.getElementById("jobCardNo");
+    const descEl = document.getElementById("description");
+    const qtyEl = document.getElementById("qtyInput");
 
-    if (!date) errors.push("Date is required");
-    if (!state.shift) errors.push("Shift must be selected");
-    if (!state.operator) errors.push("Operator must be selected");
-    if (!state.machine) errors.push("Machine must be selected");
-    if (!state.operation) errors.push("Operation must be selected");
-    if (!document.getElementById("qtyInput").value || parseInt(document.getElementById("qtyInput").value) === 0) {
-        errors.push("Quantity must be greater than 0");
-    }
-    if (!jobCardNo) errors.push("Job Card No is required");
-    if (!description) errors.push("Description is required");
+    let valid = true;
 
-    if (errors.length > 0) {
-        alert("Please fix these errors:\n\n" + errors.join("\n"));
-        return false;
+    if (!dateEl.value) {
+        showError(dateEl, "Date is required");
+        valid = false;
     }
 
-    return true;
+    if (!state.shift) {
+        const shiftContainer = document.querySelector('.row');
+        showError(shiftContainer, "Shift must be selected");
+        valid = false;
+    }
+
+    if (!state.operator) {
+        const op = document.getElementById('operatorGrid');
+        showError(op, "Operator must be selected");
+        valid = false;
+    }
+
+    if (!state.machine) {
+        const mg = document.getElementById('machineGrid');
+        showError(mg, "Machine must be selected");
+        valid = false;
+    }
+
+    if (!state.operation) {
+        const og = document.getElementById('operationGrid');
+        showError(og, "Operation must be selected");
+        valid = false;
+    }
+
+    if (!qtyEl.value || parseInt(qtyEl.value) === 0) {
+        showError(qtyEl, "Quantity must be greater than 0");
+        valid = false;
+    }
+
+    if (!jobCardEl.value) {
+        showError(jobCardEl, "Job Card No is required");
+        valid = false;
+    }
+
+    if (!descEl.value) {
+        showError(descEl, "Description is required");
+        valid = false;
+    }
+
+    return valid;
 }
 
-function to24(hour, period) {
-    if (period === "AM") return hour === 12 ? 0 : hour;
-    return hour === 12 ? 12 : hour + 12;
+function clearValidation() {
+    // remove error classes and messages
+    document.querySelectorAll('.error-message').forEach(n => n.remove());
+    document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
 }
 
-function calculateDuration() {
-    const s = to24(startHour, startPeriod);
-    const e = to24(endHour, endPeriod);
-
-    let diff = e - s;
-    if (diff < 0) diff += 24; // cross-midnight
-
-    document.getElementById("duration").innerText = diff;
+function showError(target, message) {
+    if (!target) return;
+    // if target is input or element, add error class
+    target.classList.add('error');
+    const msg = document.createElement('div');
+    msg.className = 'error-message';
+    msg.innerText = message;
+    // place message after the element if possible
+    if (target.nextSibling) target.parentNode.insertBefore(msg, target.nextSibling);
+    else target.parentNode.appendChild(msg);
 }
+
 
 
