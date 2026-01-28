@@ -51,9 +51,10 @@ self.addEventListener('fetch', e => {
         e.respondWith(
             fetch(request)
                 .then(response => {
-                    // Cache the response for offline use
+                    // Clone the response for cache and for return
+                    const responseClone = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
-                        cache.put(request, response.clone());
+                        cache.put(request, responseClone);
                     });
                     return response;
                 })
