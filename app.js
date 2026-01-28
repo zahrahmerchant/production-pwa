@@ -11,6 +11,33 @@ function setShift(value) {
         .forEach(b => b.classList.remove('selected'));
     document.getElementById(`shift-${value}`).classList.add('selected');
     state.shift = value;
+
+    // Apply default times for shifts
+    if (value === 'First') {
+        // 6 AM to 6 PM
+        startHour = 6;
+        startPeriod = 'AM';
+        endHour = 6;
+        endPeriod = 'PM';
+    } else if (value === 'Second') {
+        // 6 PM to 6 AM
+        startHour = 6;
+        startPeriod = 'PM';
+        endHour = 6;
+        endPeriod = 'AM';
+    }
+
+    // Update UI hour inputs and period labels
+    const sEl = document.getElementById('startHour');
+    const eEl = document.getElementById('endHour');
+    if (sEl) sEl.value = startHour;
+    if (eEl) eEl.value = endHour;
+    const sp = document.getElementById('startPeriod');
+    const ep = document.getElementById('endPeriod');
+    if (sp) sp.innerText = startPeriod;
+    if (ep) ep.innerText = endPeriod;
+
+    savePrefs();
 }
 
 function select(type, value) {
@@ -63,6 +90,35 @@ function updateQty() {
     input.value = state.qty;
 }
 
+// Persistence helpers
+function savePrefs() {
+    try {
+        const dateEl = document.getElementById('date');
+        const prefs = {
+            date: dateEl ? dateEl.value : '',
+            shift: state.shift,
+            startHour: startHour,
+            startPeriod: startPeriod,
+            endHour: endHour,
+            endPeriod: endPeriod
+        };
+        localStorage.setItem('prodlog_prefs', JSON.stringify(prefs));
+    } catch (e) {
+        console.warn('Could not save prefs', e);
+    }
+}
+
+function loadPrefs() {
+    try {
+        const raw = localStorage.getItem('prodlog_prefs');
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        console.warn('Could not load prefs', e);
+        return null;
+    }
+}
+
 
 function save() {
     if (!validateForm()) return;
@@ -74,9 +130,23 @@ function save() {
 // Autofill today's date on load and wire up simple listeners
 document.addEventListener('DOMContentLoaded', () => {
     const dateEl = document.getElementById('date');
-    if (dateEl && !dateEl.value) {
-        const today = new Date().toISOString().slice(0, 10);
-        dateEl.value = today;
+
+    // load saved prefs if present
+    const prefs = loadPrefs();
+    if (prefs) {
+        if (dateEl) dateEl.value = prefs.date || new Date().toISOString().slice(0, 10);
+        if (prefs.shift) {
+            // apply shift and UI
+            state.shift = prefs.shift;
+            const btn = document.getElementById(`shift-${prefs.shift}`);
+            if (btn) btn.classList.add('selected');
+        }
+        if (typeof prefs.startHour !== 'undefined') startHour = parseInt(prefs.startHour, 10);
+        if (typeof prefs.endHour !== 'undefined') endHour = parseInt(prefs.endHour, 10);
+        if (prefs.startPeriod) startPeriod = prefs.startPeriod;
+        if (prefs.endPeriod) endPeriod = prefs.endPeriod;
+    } else {
+        if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
     }
 
     // ensure qty and hours reflect state
@@ -85,12 +155,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const endEl = document.getElementById('endHour');
     if (startEl) startEl.value = startHour;
     if (endEl) endEl.value = endHour;
+    const sp = document.getElementById('startPeriod');
+    const ep = document.getElementById('endPeriod');
+    if (sp) sp.innerText = startPeriod;
+    if (ep) ep.innerText = endPeriod;
 
-    // remove inline error when user interacts
+    // remove inline error when user interacts and save date changes
     document.querySelectorAll('input, button, .scroll-grid').forEach(el => {
-        el.addEventListener('input', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); });
+        el.addEventListener('input', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); if (el.id === 'date') savePrefs(); });
         el.addEventListener('click', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); });
     });
+
+    // Recalculate duration while typing in hour inputs
+    const startInput = document.getElementById('startHour');
+    const endInput = document.getElementById('endHour');
+    if (startInput) {
+        startInput.addEventListener('input', () => { updateHour('start'); savePrefs(); });
+        startInput.addEventListener('change', () => { updateHour('start'); savePrefs(); });
+    }
+    if (endInput) {
+        endInput.addEventListener('input', () => { updateHour('end'); savePrefs(); });
+        endInput.addEventListener('change', () => { updateHour('end'); savePrefs(); });
+    }
 });
 
 function reset() {
@@ -99,36 +185,22 @@ function reset() {
     state.machine = null;
     state.operation = null;
     state.qty = 0;
-    state.shift = null;
-
-    // Clear UI
-    document.getElementById("date").value = "";
+    // Preserve date, shift and time — only clear entry fields
+    // Clear quantity and related state/UI
     document.getElementById("qtyInput").value = "0";
+    state.qty = 0;
 
-    // Reset all buttons
-    document.querySelectorAll("button").forEach(btn => {
-        btn.classList.remove("selected");
+    // Deselect operator/machine/operation buttons only
+    document.querySelectorAll('.scroll-grid button').forEach(btn => btn.classList.remove('selected'));
+
+    // Clear job card and description fields
+    ['jobCardNo', 'srNo', 'description', 'remark1', 'remark2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
 
-    // Reset time to defaults
-    startHour = 6;
-    endHour = 6;
-    startPeriod = "AM";
-    endPeriod = "PM";
-    const startEl = document.getElementById("startHour");
-    const endEl = document.getElementById("endHour");
-    if (startEl) startEl.value = "6";
-    if (endEl) endEl.value = "6";
-    document.getElementById("startPeriod").innerText = "AM";
-    document.getElementById("endPeriod").innerText = "PM";
-    calculateDuration();
-
-    // Clear all text inputs
-    document.querySelectorAll("input[type='text'], input[type='number']").forEach(input => {
-        if (input.id !== "date" && input.id !== "qtyInput") {
-            input.value = "";
-        }
-    });
+    // Clear validation markers
+    clearValidation();
 }
 
 let startHour = 6;
@@ -153,6 +225,7 @@ function changeHour(type, delta) {
         if (el) el.value = endHour;
     }
     calculateDuration();
+    savePrefs();
 }
 
 function updateHour(type) {
@@ -165,6 +238,7 @@ function updateHour(type) {
     el.value = v;
     if (type === 'start') startHour = v; else endHour = v;
     calculateDuration();
+    savePrefs();
 }
 
 function togglePeriod(type) {
@@ -176,6 +250,7 @@ function togglePeriod(type) {
         document.getElementById("endPeriod").innerText = endPeriod;
     }
     calculateDuration();
+    savePrefs();
 }
 
 function to24(hour, period) {
