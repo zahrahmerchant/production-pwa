@@ -291,9 +291,8 @@ function reloadLists() {
 }
 
 function loadFrequencyData() {
-    const backendUrl = window.location.hostname === 'localhost'
-        ? 'http://localhost:5000/api/frequency'
-        : '/api/frequency';
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+    const backendUrl = API_BASE ? `${API_BASE}/api/frequency` : '/api/frequency';
 
     fetch(backendUrl)
         .then(r => {
@@ -475,9 +474,8 @@ function save() {
         remark2: document.getElementById('remark2').value || ''
     };
 
-    const backendUrl = window.location.hostname === 'localhost'
-        ? 'http://localhost:5000/api/logs'
-        : '/api/logs';
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+    const backendUrl = API_BASE ? `${API_BASE}/api/logs` : '/api/logs';
 
     fetch(backendUrl, {
         method: 'POST',
