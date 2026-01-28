@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Production Log</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h2>Daily Production Log</h2>
+
+    <section>
+        <label>Date</label>
+        <input type="date" id="date">
+
+        <label>Shift</label>
+        <button class="chip" onclick="setShift('First')">First</button>
+        <button class="chip" onclick="setShift('Second')">Second</button>
+    </section>
+
+    <section>
+        <label>Start Time</label>
+        <input type="time" id="startTime">
+
+        <label>End Time</label>
+        <input type="time" id="endTime">
+
+        <p>Duration: <span id="duration">0</span> mins</p>
+    </section>
+
+    <section>
+        <h3>Operator</h3>
+        <div class="grid">
+            <button onclick="select('operator','Ramesh')">Ramesh</button>
+            <button onclick="select('operator','Akbar')">Akbar</button>
+            <button onclick="select('operator','Suresh')">Suresh</button>
+        </div>
+    </section>
+
+    <section>
+        <h3>Machine</h3>
+        <div class="grid">
+            <button onclick="select('machine','CNC-01')">CNC-01</button>
+            <button onclick="select('machine','CNC-02')">CNC-02</button>
+        </div>
+    </section>
+
+    <section>
+        <label>Job Card No</label>
+        <input type="number" id="jcno" placeholder="Enter JC No">
+
+        <label>Sr. No (optional)</label>
+        <input type="number" id="srno">
+
+        <label>Description</label>
+        <input type="text" id="desc" maxlength="40">
+    </section>
+
+    <section>
+        <h3>Operation</h3>
+        <div class="grid">
+            <button onclick="select('operation','Milling')">Milling</button>
+            <button onclick="select('operation','Drilling')">Drilling</button>
+        </div>
+    </section>
+
+    <section>
+        <h3>Quantity</h3>
+        <button onclick="changeQty(-1)">−</button>
+        <span id="qty">0</span>
+        <button onclick="changeQty(1)">+</button>
+    </section>
+
+    <section>
+        <label>Remark 1</label>
+        <input type="text" maxlength="40">
+
+        <label>Remark 2</label>
+        <input type="text" maxlength="40">
+    </section>
+
+    <button id="save" onclick="save()">Save & Next</button>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+</body>
+
+</html>
