@@ -31,6 +31,8 @@ db.exec(`
     jobCardNo TEXT NOT NULL,
     srNo INTEGER,
     description TEXT NOT NULL,
+    startTime TEXT,
+    endTime TEXT,
     duration INTEGER NOT NULL,
     remark1 TEXT,
     remark2 TEXT,
@@ -46,7 +48,7 @@ console.log('Database initialized at:', dbPath);
 // POST /api/logs - Save a new log entry
 app.post('/api/logs', (req, res) => {
     try {
-        const { date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, duration, remark1, remark2 } = req.body;
+        const { date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, startTime, endTime, duration, remark1, remark2 } = req.body;
 
         // Validate required fields
         if (!date || !shift || !operator || !machine || !operation || !qty || !jobCardNo || !description || duration === undefined) {
@@ -61,11 +63,11 @@ app.post('/api/logs', (req, res) => {
 
         // Insert into database
         const stmt = db.prepare(`
-            INSERT INTO logs (id, date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, duration, remark1, remark2)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO logs (id, date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, startTime, endTime, duration, remark1, remark2)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        stmt.run(id, date, shift, operator, machine, operation, qty, jobCardNo, srNo || null, description, duration, remark1 || null, remark2 || null);
+        stmt.run(id, date, shift, operator, machine, operation, qty, jobCardNo, srNo || null, description, startTime || null, endTime || null, duration, remark1 || null, remark2 || null);
 
         res.status(201).json({
             success: true,
@@ -229,6 +231,51 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+// GET /api/frequency - Get frequency of operators, machines, operations for sorting
+app.get('/api/frequency', (req, res) => {
+    try {
+        // Get operator frequencies
+        const operatorFreq = db.prepare(`
+            SELECT operator, COUNT(*) as freq FROM logs GROUP BY operator ORDER BY freq DESC
+        `).all();
+
+        // Get machine frequencies
+        const machineFreq = db.prepare(`
+            SELECT machine, COUNT(*) as freq FROM logs GROUP BY machine ORDER BY freq DESC
+        `).all();
+
+        // Get operation frequencies
+        const operationFreq = db.prepare(`
+            SELECT operation, COUNT(*) as freq FROM logs GROUP BY operation ORDER BY freq DESC
+        `).all();
+
+        // Build maps for quick lookup
+        const operatorMap = {};
+        const machineMap = {};
+        const operationMap = {};
+
+        operatorFreq.forEach(item => { operatorMap[item.operator] = item.freq; });
+        machineFreq.forEach(item => { machineMap[item.machine] = item.freq; });
+        operationFreq.forEach(item => { operationMap[item.operation] = item.freq; });
+
+        res.status(200).json({
+            success: true,
+            frequency: {
+                operators: operatorMap,
+                machines: machineMap,
+                operations: operationMap
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting frequency:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get frequency data'
+        });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`\n🚀 Production Log Backend Server running on port ${PORT}`);
@@ -239,5 +286,6 @@ app.listen(PORT, () => {
     console.log(`  GET    /api/logs/:id      - Get specific log`);
     console.log(`  DELETE /api/logs/:id      - Delete a log`);
     console.log(`  GET    /api/stats         - Get statistics`);
+    console.log(`  GET    /api/frequency     - Get frequency data (for sorting lists)`);
     console.log(`  GET    /api/health        - Health check\n`);
 });

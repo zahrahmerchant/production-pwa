@@ -2,84 +2,75 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Log</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
     <h2>Daily Production Log</h2>
 
+    <!-- DATE & SHIFT -->
     <section>
-        <label for="date">Date</label>
-        <input type="date" id="date">
-
-        <label>Shift</label>
-        <div class="row">
-            <button id="shift-First" class="shift-btn" onclick="setShift('First')">First</button>
-            <button id="shift-Second" class="shift-btn" onclick="setShift('Second')">Second</button>
+        <div class="field-group">
+            <label for="date">Date</label>
+            <input type="date" id="date">
         </div>
 
+        <div class="field-group">
+            <label>Shift</label>
+            <div class="button-row">
+                <button id="shift-First" class="shift-btn" onclick="setShift('First')">First</button>
+                <button id="shift-Second" class="shift-btn" onclick="setShift('Second')">Second</button>
+            </div>
+        </div>
     </section>
 
+    <!-- TIME WORKED -->
     <section>
         <h3>Time Worked</h3>
 
-        <!-- START TIME -->
         <div class="time-row">
-            <span class="time-label">Start Time</span>
-
-            <button onclick="changeHour('start', -1)">−</button>
-            <input id="startHour" class="time-box time-box-input" type="number" min="1" max="12" value="8"
-                onchange="updateHour('start')">
-            <button onclick="changeHour('start', 1)">+</button>
-
-            <button onclick="togglePeriod('start')" id="startPeriod" class="period-btn">
-                AM
-            </button>
+            <label>Start Time</label>
+            <button onclick="changeHour('start', -1)" class="time-btn">−</button>
+            <input id="startHour" class="time-box-input" type="number" min="1" max="12">
+            <button onclick="changeHour('start', 1)" class="time-btn">+</button>
+            <button id="startPeriod" class="period-btn" onclick="togglePeriod('start')">AM</button>
         </div>
 
-        <!-- END TIME -->
         <div class="time-row">
-            <span class="time-label">End Time</span>
-
-            <button onclick="changeHour('end', -1)">−</button>
-            <input id="endHour" class="time-box time-box-input" type="number" min="1" max="12" value="2"
-                onchange="updateHour('end')">
-            <button onclick="changeHour('end', 1)">+</button>
-
-            <button onclick="togglePeriod('end')" id="endPeriod" class="period-btn">
-                PM
-            </button>
+            <label>End Time</label>
+            <button onclick="changeHour('end', -1)" class="time-btn">−</button>
+            <input id="endHour" class="time-box-input" type="number" min="1" max="12">
+            <button onclick="changeHour('end', 1)" class="time-btn">+</button>
+            <button id="endPeriod" class="period-btn" onclick="togglePeriod('end')">PM</button>
         </div>
 
-        <p class="duration">
-            Duration: <strong><span id="duration">6</span> hrs</strong>
+        <p class="duration-display">
+            Duration: <strong><span id="duration">12</span> hrs</strong>
         </p>
     </section>
 
-
-
+    <!-- OPERATOR -->
     <section>
         <h3>Operator</h3>
-
         <div id="operatorGrid" class="scroll-grid">
-            <!-- operator buttons will be rendered from lists.json -->
+            <!-- Populated from lists.json -->
         </div>
     </section>
 
-
+    <!-- MACHINE -->
     <section>
         <h3>Machine</h3>
         <div id="machineGrid" class="scroll-grid">
-            <!-- machine buttons will be rendered from lists.json -->
+            <!-- Populated from lists.json -->
         </div>
     </section>
 
-    <section class="card">
+    <!-- JOB CARD INFO -->
+    <section>
         <h3>Job Card</h3>
 
         <div class="field-group">
@@ -98,25 +89,29 @@
         </div>
     </section>
 
-
+    <!-- OPERATION -->
     <section>
         <h3>Operation</h3>
         <div id="operationGrid" class="scroll-grid">
-            <!-- operation buttons will be rendered from lists.json -->
+            <!-- Populated from lists.json -->
         </div>
     </section>
 
+    <!-- QUANTITY -->
     <section>
         <h3>Quantity</h3>
         <div class="time-row">
-            <span class="time-label">Quantity</span>
-            <button onclick="changeQty(-1)">−</button>
-            <input type="number" id="qtyInput" class="time-box-input" value="0" min="0" onchange="updateQty()">
-            <button onclick="changeQty(1)">+</button>
+            <label>Quantity</label>
+            <button onclick="changeQty(-1)" class="time-btn">−</button>
+            <input type="number" id="qtyInput" class="time-box-input" value="0" min="0">
+            <button onclick="changeQty(1)" class="time-btn">+</button>
         </div>
     </section>
 
+    <!-- REMARKS -->
     <section>
+        <h3>Remarks</h3>
+
         <div class="field-group">
             <label for="remark1">Remark 1</label>
             <input type="text" id="remark1" maxlength="40">
@@ -128,13 +123,18 @@
         </div>
     </section>
 
+    <!-- SAVE BUTTON -->
+    <div class="button-section">
+        <button id="save" class="save-btn" onclick="save()">Save & Next</button>
+    </div>
 
-    <button id="save" onclick="save()">Save & Next</button>
-
+    <!-- SERVICE WORKER REGISTRATION -->
     <script src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js');
+            navigator.serviceWorker.register('service-worker.js').catch(err => {
+                console.warn('Service Worker registration failed:', err);
+            });
         }
     </script>
 </body>
