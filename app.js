@@ -96,3 +96,4 @@ function calculateDuration() {
     document.getElementById("duration").innerText = diff;
 }
 
+

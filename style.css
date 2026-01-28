@@ -68,3 +68,44 @@ button {
     padding: 16px;
     font-size: 18px;
 }
+
+/* Card container (if not already present) */
+.card {
+    background: #ffffff;
+    padding: 18px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+}
+
+/* Each input block */
+.field-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    /* space between inputs */
+}
+
+/* Labels */
+.field-group label {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+/* Inputs */
+.field-group input {
+    height: 48px;
+    /* finger-friendly */
+    font-size: 18px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #ccc;
+}
+
+/* Improve focus visibility */
+.field-group input:focus {
+    outline: none;
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.15);
+}
