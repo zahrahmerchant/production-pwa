@@ -14,7 +14,7 @@
     <h2>Daily Production Log</h2>
 
     <section>
-        <label>Date</label>
+        <label for="date">Date</label>
         <input type="date" id="date">
 
         <label>Shift</label>
@@ -97,18 +97,18 @@
         <h3>Job Card</h3>
 
         <div class="field-group">
-            <label>Job Card No</label>
-            <input type="number" placeholder="Enter JC No">
+            <label for="jobCardNo">Job Card No</label>
+            <input type="number" id="jobCardNo" placeholder="Enter JC No">
         </div>
 
         <div class="field-group">
-            <label>Sr. No (optional)</label>
-            <input type="number">
+            <label for="srNo">Sr. No (optional)</label>
+            <input type="number" id="srNo">
         </div>
 
         <div class="field-group">
-            <label>Description</label>
-            <input type="text" maxlength="40" placeholder="Max 5–6 words">
+            <label for="description">Description</label>
+            <input type="text" id="description" maxlength="40" placeholder="Max 5–6 words">
         </div>
     </section>
 
@@ -128,28 +128,32 @@
 
     <section>
         <h3>Quantity</h3>
-        <input type="number" id="qtyInput" value="0" />
-        <button onclick="changeQty(-1)">−</button>
-        <button onclick="changeQty(1)">+</button>
-
+        <div class="qty-controls">
+            <button onclick="changeQty(-1)">−</button>
+            <input type="number" id="qtyInput" value="0" readonly />
+            <button onclick="changeQty(1)">+</button>
+        </div>
     </section>
 
-    <section>
-        <label>Remark 1</label>
-        <input type="text" maxlength="40">
+    <sectdiv class="field-group">
+        <label for="remark1">Remark 1</label>
+        <input type="text" id="remark1" maxlength="40">
+        </div>
 
-        <label>Remark 2</label>
-        <input type="text" maxlength="40">
-    </section>
+        <div class="field-group">
+            <label for="remark2">Remark 2</label>
+            <input type="text" id="remark2" maxlength="40">
+        </div <input type="text" maxlength="40">
+        </section>
 
-    <button id="save" onclick="save()">Save & Next</button>
+        <button id="save" onclick="save()">Save & Next</button>
 
-    <script src="app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js');
-        }
-    </script>
+        <script src="app.js"></script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js');
+            }
+        </script>
 </body>
 
 </html>
