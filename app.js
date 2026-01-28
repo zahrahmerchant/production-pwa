@@ -119,12 +119,152 @@ function loadPrefs() {
     }
 }
 
+// Lists management (load from lists.json or import local JSON)
+function renderList(gridId, items, type) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.innerHTML = '';
+    (items || []).forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = item;
+        btn.addEventListener('click', () => select(type, item));
+        grid.appendChild(btn);
+    });
+}
+
+function loadListsFromObject(obj) {
+    // support multiple key names
+    const operators = obj.operators || obj.operator || [];
+    const machines = obj.machines || obj.machine || [];
+    const operations = obj.operations || obj.operation || [];
+
+    renderList('operatorGrid', operators, 'operator');
+    renderList('machineGrid', machines, 'machine');
+    renderList('operationGrid', operations, 'operation');
+}
+
+function reloadLists() {
+    // Try network fetch first, then relative path, then cache fallback.
+    console.log('reloadLists() called');
+    const showError = msg => {
+        console.warn(msg);
+        const info = document.getElementById('listsSourceInfo');
+        if (info) info.innerText = msg;
+    };
+
+    console.log('Attempting to fetch lists.json...');
+    fetch('lists.json', { cache: 'no-store' })
+        .then(r => {
+            console.log('Fetch response:', r.status, r.ok);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .catch(err => {
+            console.warn('fetch lists.json failed, retrying with ./lists.json', err);
+            return fetch('./lists.json', { cache: 'no-store' })
+                .then(r => {
+                    console.log('Fetch ./lists.json response:', r.status, r.ok);
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                });
+        })
+        .catch(err2 => {
+            console.warn('both network attempts failed, trying cache', err2);
+            if ('caches' in window) {
+                return caches.open('prod-log').then(cache => {
+                    console.log('Trying cache...');
+                    return cache.match('lists.json');
+                }).then(resp => {
+                    console.log('Cache response:', resp);
+                    if (!resp) throw err2;
+                    return resp.json();
+                });
+            }
+            throw err2;
+        })
+        .then(j => {
+            console.log('Lists loaded successfully:', j);
+            if (!j) throw new Error('No lists data');
+            loadListsFromObject(j);
+            const info = document.getElementById('listsSourceInfo');
+            if (info) info.innerText = 'Lists loaded successfully!';
+        })
+        .catch(finalErr => {
+            const msg = 'Could not load lists.json. Ensure the app is served over HTTP and that lists.json exists in the repo. Error: ' + (finalErr && finalErr.message ? finalErr.message : finalErr);
+            console.error(msg);
+            showError(msg);
+        });
+}
+
+function importListsFile() {
+    const f = document.getElementById('listsFile');
+    if (!f || !f.files || !f.files[0]) return alert('Select a lists JSON file to import');
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const j = JSON.parse(e.target.result);
+            loadListsFromObject(j);
+            alert('Lists imported (temporary). To make permanent, update lists.json in the repo.');
+        } catch (ex) {
+            alert('Invalid JSON file');
+        }
+    };
+    reader.readAsText(f.files[0]);
+}
+
 
 function save() {
     if (!validateForm()) return;
 
-    alert("Saved ✓ (prototype)");
-    reset();
+    // Get duration from DOM
+    const duration = parseInt(document.getElementById('duration').innerText);
+
+    // Build log entry
+    const logData = {
+        date: document.getElementById('date').value,
+        shift: state.shift,
+        operator: state.operator,
+        machine: state.machine,
+        operation: state.operation,
+        qty: parseInt(document.getElementById('qtyInput').value),
+        jobCardNo: document.getElementById('jobCardNo').value,
+        srNo: document.getElementById('srNo').value ? parseInt(document.getElementById('srNo').value) : null,
+        description: document.getElementById('description').value,
+        duration: duration,
+        remark1: document.getElementById('remark1').value || '',
+        remark2: document.getElementById('remark2').value || ''
+    };
+
+    // Determine backend URL (development vs production)
+    const backendUrl = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api/logs'
+        : '/api/logs'; // Production: use same domain (Netlify Functions)
+
+    console.log('Saving to backend:', backendUrl, logData);
+
+    // Send to backend
+    fetch(backendUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logData)
+    })
+        .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+        })
+        .then(result => {
+            if (result.success) {
+                alert('✓ Log saved successfully!');
+                reset();
+            } else {
+                alert('Error: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            console.error('Save error:', err);
+            alert('Could not save log. Check console for details.\n\nError: ' + err.message);
+        });
 }
 
 // Autofill today's date on load and wire up simple listeners
@@ -165,6 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
         el.addEventListener('input', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); if (el.id === 'date') savePrefs(); });
         el.addEventListener('click', () => { el.classList.remove('error'); const m = el.parentNode && el.parentNode.querySelector('.error-message'); if (m) m.remove(); });
     });
+
+    // Load lists.json into grids
+    reloadLists();
 
     // Recalculate duration while typing in hour inputs
     const startInput = document.getElementById('startHour');
@@ -207,6 +350,7 @@ let startHour = 6;
 let endHour = 6;
 let startPeriod = "AM";
 let endPeriod = "PM";
+
 
 function normalizeHour(h) {
     if (h < 1) return 12;

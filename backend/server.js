@@ -1,0 +1,243 @@
+// backend/server.js
+// Production Log Backend Server
+// Handles saving and retrieving production logs
+
+const express = require('express');
+const Database = require('better-sqlite3');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(express.json());
+app.use(cors());
+
+// Initialize SQLite database
+const dbPath = path.join(__dirname, 'production-logs.db');
+const db = new Database(dbPath);
+
+// Create table if it doesn't exist
+db.exec(`
+  CREATE TABLE IF NOT EXISTS logs (
+    id TEXT PRIMARY KEY,
+    date TEXT NOT NULL,
+    shift TEXT NOT NULL,
+    operator TEXT NOT NULL,
+    machine TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    qty INTEGER NOT NULL,
+    jobCardNo TEXT NOT NULL,
+    srNo INTEGER,
+    description TEXT NOT NULL,
+    duration INTEGER NOT NULL,
+    remark1 TEXT,
+    remark2 TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+console.log('Database initialized at:', dbPath);
+
+// ============= API ENDPOINTS =============
+
+// POST /api/logs - Save a new log entry
+app.post('/api/logs', (req, res) => {
+    try {
+        const { date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, duration, remark1, remark2 } = req.body;
+
+        // Validate required fields
+        if (!date || !shift || !operator || !machine || !operation || !qty || !jobCardNo || !description || duration === undefined) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields'
+            });
+        }
+
+        // Generate unique ID
+        const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Insert into database
+        const stmt = db.prepare(`
+            INSERT INTO logs (id, date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, duration, remark1, remark2)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(id, date, shift, operator, machine, operation, qty, jobCardNo, srNo || null, description, duration, remark1 || null, remark2 || null);
+
+        res.status(201).json({
+            success: true,
+            message: 'Log saved successfully',
+            id: id
+        });
+
+    } catch (error) {
+        console.error('Error saving log:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save log',
+            details: error.message
+        });
+    }
+});
+
+// GET /api/logs - Retrieve logs
+app.get('/api/logs', (req, res) => {
+    try {
+        const { date, limit = 100 } = req.query;
+
+        let query = 'SELECT * FROM logs';
+        const params = [];
+
+        if (date) {
+            query += ' WHERE date = ?';
+            params.push(date);
+        }
+
+        query += ' ORDER BY createdAt DESC LIMIT ?';
+        params.push(parseInt(limit) || 100);
+
+        const stmt = db.prepare(query);
+        const logs = stmt.all(...params);
+
+        res.status(200).json({
+            success: true,
+            count: logs.length,
+            logs: logs
+        });
+
+    } catch (error) {
+        console.error('Error retrieving logs:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve logs',
+            details: error.message
+        });
+    }
+});
+
+// GET /api/logs/:id - Get a specific log
+app.get('/api/logs/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const stmt = db.prepare('SELECT * FROM logs WHERE id = ?');
+        const log = stmt.get(id);
+
+        if (!log) {
+            return res.status(404).json({
+                success: false,
+                error: 'Log not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            log: log
+        });
+
+    } catch (error) {
+        console.error('Error retrieving log:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve log'
+        });
+    }
+});
+
+// DELETE /api/logs/:id - Delete a log
+app.delete('/api/logs/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const stmt = db.prepare('DELETE FROM logs WHERE id = ?');
+        const result = stmt.run(id);
+
+        if (result.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Log not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Log deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting log:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete log'
+        });
+    }
+});
+
+// GET /api/stats - Get statistics
+app.get('/api/stats', (req, res) => {
+    try {
+        const { date } = req.query;
+
+        let whereClause = '';
+        const params = [];
+
+        if (date) {
+            whereClause = 'WHERE date = ?';
+            params.push(date);
+        }
+
+        const totalStmt = db.prepare(`SELECT COUNT(*) as count FROM logs ${whereClause}`);
+        const total = totalStmt.get(...params).count;
+
+        const qtyStmt = db.prepare(`SELECT SUM(qty) as total FROM logs ${whereClause}`);
+        const totalQty = qtyStmt.get(...params).total || 0;
+
+        const operatorStmt = db.prepare(`SELECT operator, COUNT(*) as count FROM logs ${whereClause} GROUP BY operator ORDER BY count DESC`);
+        const topOperators = operatorStmt.all(...params);
+
+        const machineStmt = db.prepare(`SELECT machine, COUNT(*) as count FROM logs ${whereClause} GROUP BY machine ORDER BY count DESC`);
+        const topMachines = machineStmt.all(...params);
+
+        res.status(200).json({
+            success: true,
+            stats: {
+                totalEntries: total,
+                totalQuantity: totalQty,
+                topOperators: topOperators.slice(0, 5),
+                topMachines: topMachines.slice(0, 5)
+            }
+        });
+
+    } catch (error) {
+        console.error('Error getting stats:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get statistics'
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Backend is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`\n🚀 Production Log Backend Server running on port ${PORT}`);
+    console.log(`📊 Database: ${dbPath}`);
+    console.log(`\nAPI Endpoints:`);
+    console.log(`  POST   /api/logs          - Save a new log`);
+    console.log(`  GET    /api/logs          - Retrieve all logs`);
+    console.log(`  GET    /api/logs/:id      - Get specific log`);
+    console.log(`  DELETE /api/logs/:id      - Delete a log`);
+    console.log(`  GET    /api/stats         - Get statistics`);
+    console.log(`  GET    /api/health        - Health check\n`);
+});

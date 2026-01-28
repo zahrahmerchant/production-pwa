@@ -1,0 +1,21 @@
+{
+    "name": "production-log-pwa",
+    "version": "1.0.0",
+    "description": "A Progressive Web App for tracking daily production activities",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "keywords": [
+        "pwa",
+        "production",
+        "log",
+        "offline"
+    ],
+    "author": "Saftech",
+    "license": "MIT",
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}

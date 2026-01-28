@@ -1,0 +1,58 @@
+# Netlify Configuration for Production Log PWA
+
+# Build command - not needed since we're serving static files
+# But if you add a build step later, put it here
+# [build]
+# command = "echo 'Static site - no build needed'"
+# publish = "."
+
+# Redirect all 404s to index.html (important for SPA routing)
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+# Cache headers for better performance
+[[headers]]
+for = "/*"
+[headers.values]
+Cache-Control = "max-age=3600, must-revalidate"
+
+# Don't cache service worker (always get latest)
+[[headers]]
+for = "/service-worker.js"
+[headers.values]
+Cache-Control = "max-age=0, no-cache, no-store, must-revalidate"
+
+# Cache lists.json with revalidation (network-first strategy in SW)
+[[headers]]
+for = "/lists.json"
+[headers.values]
+Cache-Control = "max-age=3600, must-revalidate"
+
+# Cache static assets aggressively
+[[headers]]
+for = "/style.css"
+[headers.values]
+Cache-Control = "max-age=31536000, immutable"
+
+[[headers]]
+for = "/app.js"
+[headers.values]
+Cache-Control = "max-age=31536000, immutable"
+
+[[headers]]
+for = "/manifest.json"
+[headers.values]
+Cache-Control = "max-age=3600, must-revalidate"
+Content-Type = "application/manifest+json"
+
+# Security headers
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "SAMEORIGIN"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "geolocation=(), microphone=(), camera=()"
