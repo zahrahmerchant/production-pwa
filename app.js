@@ -6,9 +6,21 @@ let state = {
     shift: null
 };
 
-function setShift(s) {
-    state.shift = s;
+function setShift(value) {
+    document.querySelectorAll('.shift-btn')
+        .forEach(b => b.classList.remove('selected'));
+    document.getElementById(`shift-${value}`).classList.add('selected');
+    state.shift = value;
 }
+
+function calculateDuration() {
+    const start = get24Hour(startHour, startPeriod);
+    const end = get24Hour(endHour, endPeriod);
+    let diff = end - start;
+    if (diff < 0) diff += 24;
+    document.getElementById("duration").innerText = diff + " hrs";
+}
+
 
 function select(type, value) {
     state[type] = value;
@@ -18,9 +30,10 @@ function select(type, value) {
 }
 
 function changeQty(delta) {
-    state.qty = Math.max(0, state.qty + delta);
-    document.getElementById("qty").innerText = state.qty;
+    const input = document.getElementById("qtyInput");
+    input.value = Math.max(0, parseInt(input.value || 0) + delta);
 }
+
 
 function save() {
     alert("Saved ✓ (prototype)");

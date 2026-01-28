@@ -18,8 +18,11 @@
         <input type="date" id="date">
 
         <label>Shift</label>
-        <button class="chip" onclick="setShift('First')">First</button>
-        <button class="chip" onclick="setShift('Second')">Second</button>
+        <div class="row">
+            <button id="shift-First" class="shift-btn" onclick="setShift('First')">First</button>
+            <button id="shift-Second" class="shift-btn" onclick="setShift('Second')">Second</button>
+        </div>
+
     </section>
 
     <section>
@@ -70,9 +73,10 @@
 
     <section>
         <h3>Quantity</h3>
+        <input type="number" id="qtyInput" value="0" />
         <button onclick="changeQty(-1)">−</button>
-        <span id="qty">0</span>
         <button onclick="changeQty(1)">+</button>
+
     </section>
 
     <section>

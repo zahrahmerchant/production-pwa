@@ -1,13 +1,23 @@
 body {
-    font-family: Arial;
-    padding: 16px;
+    font-family: system-ui, sans-serif;
+    padding: 20px;
+    background: #f6f6f6;
 }
 
 section {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
     margin-bottom: 16px;
 }
 
+h3 {
+    margin-bottom: 12px;
+}
+
 button {
+    min-height: 52px;
+    border-radius: 8px;
     padding: 12px;
     margin: 6px;
     font-size: 16px;
@@ -23,7 +33,7 @@ button {
 }
 
 .selected {
-    background: #4CAF50;
+    background: #2e7d32;
     color: white;
 }
 
