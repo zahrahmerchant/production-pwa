@@ -30,7 +30,8 @@
 
         <!-- START TIME -->
         <div class="time-row">
-            <span>Start Time</span>
+            <span class="time-label">Start Time</span>
+
             <button onclick="changeHour('start', -1)">−</button>
             <span id="startHour" class="time-box">8</span>
             <button onclick="changeHour('start', 1)">+</button>
@@ -42,7 +43,8 @@
 
         <!-- END TIME -->
         <div class="time-row">
-            <span>End Time</span>
+            <span class="time-label">End Time</span>
+
             <button onclick="changeHour('end', -1)">−</button>
             <span id="endHour" class="time-box">2</span>
             <button onclick="changeHour('end', 1)">+</button>
@@ -52,46 +54,69 @@
             </button>
         </div>
 
-        <!-- DURATION -->
         <p class="duration">
             Duration: <strong><span id="duration">6</span> hrs</strong>
         </p>
     </section>
 
 
+
     <section>
         <h3>Operator</h3>
-        <div class="grid">
+
+        <div class="scroll-grid">
             <button onclick="select('operator','Ramesh')">Ramesh</button>
             <button onclick="select('operator','Akbar')">Akbar</button>
             <button onclick="select('operator','Suresh')">Suresh</button>
+            <button onclick="select('operator','Vikram')">Vikram</button>
+            <button onclick="select('operator','Manoj')">Manoj</button>
+            <button onclick="select('operator','Rajesh')">Rajesh</button>
+            <button onclick="select('operator','Amit')">Amit</button>
+            <button onclick="select('operator','Sunil')">Sunil</button>
+            <button onclick="select('operator','Karan')">Karan</button>
+            <button onclick="select('operator','Deepak')">Deepak</button>
+            <button onclick="select('operator','Naveen')">Naveen</button>
+
         </div>
     </section>
+
 
     <section>
         <h3>Machine</h3>
-        <div class="grid">
+        <div class="scroll-grid">
             <button onclick="select('machine','CNC-01')">CNC-01</button>
             <button onclick="select('machine','CNC-02')">CNC-02</button>
+            <button onclick="select('machine','Lathe-01')">Lathe-01</button>
+            <button onclick="select('machine','Lathe-02')">Lathe-02</button>
+            <button onclick="select('machine','Milling-01')">Milling-01</button>
+            <button onclick="select('machine','Milling-02')">Milling-02</button>
         </div>
     </section>
 
     <section>
+        <h3>Job Card</h3>
+
         <label>Job Card No</label>
-        <input type="number" id="jcno" placeholder="Enter JC No">
+        <input type="number" placeholder="Enter JC No">
 
         <label>Sr. No (optional)</label>
-        <input type="number" id="srno">
+        <input type="number">
 
         <label>Description</label>
-        <input type="text" id="desc" maxlength="40">
+        <input type="text" maxlength="40" placeholder="Max 5–6 words">
     </section>
+
 
     <section>
         <h3>Operation</h3>
-        <div class="grid">
+        <div class="scroll-grid">
             <button onclick="select('operation','Milling')">Milling</button>
             <button onclick="select('operation','Drilling')">Drilling</button>
+            <button onclick="select('operation','Turning')">Turning</button>
+            <button onclick="select('operation','Grinding')">Grinding</button>
+            <button onclick="select('operation','Cutting')">Cutting</button>
+            <button onclick="select('operation','Welding')">Welding</button>
+            <button onclick="select('operation','Polishing')">Polishing</button>
         </div>
     </section>
 

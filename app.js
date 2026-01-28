@@ -48,10 +48,16 @@ function reset() {
     document.getElementById("qty").innerText = 0;
 }
 
-let startHour = 8;
-let endHour = 2;
+let startHour = 6;
+let endHour = 6;
 let startPeriod = "AM";
 let endPeriod = "PM";
+
+function normalizeHour(h) {
+    if (h < 1) return 12;
+    if (h > 12) return 1;
+    return h;
+}
 
 function changeHour(type, delta) {
     if (type === "start") {
@@ -75,30 +81,18 @@ function togglePeriod(type) {
     calculateDuration();
 }
 
-function normalizeHour(hour) {
-    if (hour < 1) return 12;
-    if (hour > 12) return 1;
-    return hour;
-}
-
-function to24Hour(hour, period) {
-    if (period === "AM") {
-        return hour === 12 ? 0 : hour;
-    } else {
-        return hour === 12 ? 12 : hour + 12;
-    }
+function to24(hour, period) {
+    if (period === "AM") return hour === 12 ? 0 : hour;
+    return hour === 12 ? 12 : hour + 12;
 }
 
 function calculateDuration() {
-    const start24 = to24Hour(startHour, startPeriod);
-    const end24 = to24Hour(endHour, endPeriod);
+    const s = to24(startHour, startPeriod);
+    const e = to24(endHour, endPeriod);
 
-    let duration = end24 - start24;
+    let diff = e - s;
+    if (diff < 0) diff += 24; // cross-midnight
 
-    // Handle cross-midnight (2nd shift)
-    if (duration < 0) {
-        duration += 24;
-    }
-
-    document.getElementById("duration").innerText = duration;
+    document.getElementById("duration").innerText = diff;
 }
+
