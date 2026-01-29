@@ -201,7 +201,7 @@ function select(type, value) {
     if (!grid) return;
 
     const buttons = Array.from(grid.querySelectorAll('button'));
-    const selectedBtn = buttons.find(b => b.innerText.trim() === value);
+    const selectedBtn = buttons.find(b => b.getAttribute('data-value') === value);
     if (!selectedBtn) return;
 
     if (state[type] === value) {
@@ -234,6 +234,7 @@ function renderGrid(list, gridId, selected, onClick, filter = '') {
         const btn = document.createElement('button');
         btn.className = 'grid-btn' + (selected === item ? ' selected' : '');
         btn.innerText = item;
+        btn.setAttribute('data-value', item);
         btn.onclick = () => onClick(item);
         grid.appendChild(btn);
     });
