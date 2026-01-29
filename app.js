@@ -216,35 +216,33 @@ function select(type, value) {
 // LISTS & RENDERING
 // ============================================================
 
-function renderList(gridId, items, type) {
+// Utility: Render a scroll grid for a list, with optional filter
+function renderGrid(list, gridId, selected, onClick, filter = '') {
     const grid = document.getElementById(gridId);
     if (!grid) return;
-
     grid.innerHTML = '';
-
-    const sortedItems = (items || []).sort((a, b) => {
-        const freqKey = type === 'operator' ? 'operators'
-            : type === 'machine' ? 'machines'
-                : 'operations';
-        const freqA = frequencyMap[freqKey] && frequencyMap[freqKey][a] || 0;
-        const freqB = frequencyMap[freqKey] && frequencyMap[freqKey][b] || 0;
-
-        if (freqB !== freqA) return freqB - freqA;
-        return a.localeCompare(b);
-    });
-
-    sortedItems.forEach(item => {
+    let filtered = list;
+    if (filter) {
+        const f = filter.trim().toLowerCase();
+        filtered = list.filter(item => item.toLowerCase().includes(f));
+    }
+    filtered.forEach(item => {
         const btn = document.createElement('button');
-        btn.type = 'button';
+        btn.className = 'grid-btn' + (selected === item ? ' selected' : '');
         btn.innerText = item;
-        btn.addEventListener('click', () => select(type, item));
-
-        if (state[type] === item) {
-            btn.classList.add('selected');
-        }
-
+        btn.onclick = () => onClick(item);
         grid.appendChild(btn);
     });
+}
+
+// Render operator, machine, operation grids with search filters
+function renderAllGrids() {
+    const opFilter = document.getElementById('operatorSearch')?.value || '';
+    const machFilter = document.getElementById('machineSearch')?.value || '';
+    const opnFilter = document.getElementById('operationSearch')?.value || '';
+    renderGrid(window.lists.operators, 'operatorGrid', state.operator, selectOperator, opFilter);
+    renderGrid(window.lists.machines, 'machineGrid', state.machine, selectMachine, machFilter);
+    renderGrid(window.lists.operations, 'operationGrid', state.operation, selectOperation, opnFilter);
 }
 
 function loadListsFromObject(obj) {
@@ -253,9 +251,13 @@ function loadListsFromObject(obj) {
     const operations = obj.operations || obj.operation || [];
 
 
-    renderList('operatorGrid', operators, 'operator');
-    renderList('machineGrid', machines, 'machine');
-    renderList('operationGrid', operations, 'operation');
+    // Save lists globally for filtering
+    window.lists = {
+        operators,
+        machines,
+        operations
+    };
+    renderAllGrids();
 }
 
 function reloadLists() {
@@ -632,6 +634,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     reloadLists();
     loadFrequencyData();
+    // Add search listeners
+    ['operatorSearch', 'machineSearch', 'operationSearch'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', renderAllGrids);
+        }
+    });
 });
 
 // Edit log in localStorage and return to review page
