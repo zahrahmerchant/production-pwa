@@ -116,6 +116,13 @@
         "Grinding",
         "Cutting",
         "Welding",
-        "Bending"
+        "Bending",
+        "Threading",
+        "Heating",
+        "Laser Cutting",
+        "Plasma Cutting",
+        "Tapping",
+        "Setup",
+        "Packing"
     ]
 }
