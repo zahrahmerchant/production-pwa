@@ -106,7 +106,8 @@
         "Manual Work",
         "Iron Work 1",
         "Iron Work 2",
-        "Mazak E1600V"
+        "Mazak E1600V",
+        "Packing"
     ],
     "operations": [
         "Milling",
@@ -115,6 +116,7 @@
         "Grinding",
         "Cutting",
         "Welding",
-        "Polishing"
+        "Bending",
+        "Pressing"
     ]
 }

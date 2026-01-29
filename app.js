@@ -459,8 +459,30 @@ function save() {
     const startTimeStr = `${String(startHour).padStart(2, '0')}:00 ${startPeriod}`;
     const endTimeStr = `${String(endHour).padStart(2, '0')}:00 ${endPeriod}`;
 
+    // Always store date in ISO yyyy-mm-dd format
+    let rawDate = document.getElementById('date').value;
+    let isoDate = '';
+    if (rawDate) {
+        // Handles both yyyy-mm-dd and mm/dd/yyyy or dd/mm/yyyy
+        const d = new Date(rawDate);
+        if (!isNaN(d)) {
+            isoDate = d.toISOString().split('T')[0];
+        } else {
+            // fallback: try to parse manually
+            const parts = rawDate.split(/[\/-]/);
+            if (parts.length === 3) {
+                // Try mm/dd/yyyy or dd/mm/yyyy
+                const y = parts[2].length === 4 ? parts[2] : parts[0];
+                const m = parts[2].length === 4 ? parts[0] : parts[1];
+                const day = parts[2].length === 4 ? parts[1] : parts[2];
+                isoDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            } else {
+                isoDate = rawDate;
+            }
+        }
+    }
     const logData = {
-        date: document.getElementById('date').value,
+        date: isoDate,
         shift: state.shift,
         operator: state.operator,
         machine: state.machine,
