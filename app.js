@@ -187,6 +187,10 @@ function updateQty() {
 
 // ============================================================
 // SELECTION (Operator, Machine, Operation)
+// Wrappers for filtered grid selection
+function selectOperator(value) { select('operator', value); }
+function selectMachine(value) { select('machine', value); }
+function selectOperation(value) { select('operation', value); }
 // ============================================================
 
 function select(type, value) {
