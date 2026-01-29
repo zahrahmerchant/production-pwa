@@ -291,7 +291,9 @@ function reloadLists() {
 }
 
 function loadFrequencyData() {
-    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+    // Set your ngrok tunnel URL here for production
+    const NGROK_URL = 'https://unpulleyed-brook-gooselike.ngrok-free.dev'; // TODO: Replace with your actual ngrok URL
+    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : NGROK_URL);
     const backendUrl = API_BASE ? `${API_BASE}/api/frequency` : '/api/frequency';
 
     fetch(backendUrl)
@@ -474,31 +476,20 @@ function save() {
         remark2: document.getElementById('remark2').value || ''
     };
 
-    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-    const backendUrl = API_BASE ? `${API_BASE}/api/logs` : '/api/logs';
+    // Store locally per date+shift
+    const key = `prodlog_entries_${logData.date}_${logData.shift}`;
+    let logs = [];
+    try {
+        logs = JSON.parse(localStorage.getItem(key)) || [];
+    } catch (e) {
+        logs = [];
+    }
+    logs.push(logData);
+    localStorage.setItem(key, JSON.stringify(logs));
 
-    fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(logData)
-    })
-        .then(r => {
-            if (!r.ok) throw new Error(`HTTP ${r.status}`);
-            return r.json();
-        })
-        .then(result => {
-            if (result.success) {
-                alert('✓ Log saved successfully!');
-                reset();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                alert('Error: ' + (result.error || 'Unknown error'));
-            }
-        })
-        .catch(err => {
-            console.error('Save error:', err);
-            alert(`Could not save log: ${err.message}`);
-        });
+    alert('Log saved locally! You can review and submit later.');
+    reset();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ============================================================
@@ -522,6 +513,72 @@ document.addEventListener('DOMContentLoaded', () => {
         if (prefs.endPeriod) endPeriod = prefs.endPeriod;
     } else {
         if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+    }
+
+    // Check for edit mode from review page
+    const urlParams = new URLSearchParams(window.location.search);
+    const isEdit = urlParams.get('edit') === '1';
+    let editIdx = null;
+    if (isEdit) {
+        editIdx = localStorage.getItem('prodlog_edit_idx');
+        if (editIdx !== null) {
+            // Load log data from localStorage
+            const key = `prodlog_entries_${prefs.date}_${prefs.shift}`;
+            let logs = [];
+            try { logs = JSON.parse(localStorage.getItem(key)) || []; } catch (e) { logs = []; }
+            const log = logs[parseInt(editIdx, 10)];
+            if (log) {
+                // Fill form fields (all)
+                state.operator = log.operator;
+                state.machine = log.machine;
+                state.operation = log.operation;
+                state.qty = log.qty;
+                state.shift = log.shift;
+                if (dateEl) dateEl.value = log.date;
+                document.getElementById('qtyInput').value = log.qty;
+                document.getElementById('jobCardNo').value = log.jobCardNo;
+                document.getElementById('srNo').value = log.srNo || '';
+                document.getElementById('description').value = log.description;
+                // Time
+                if (typeof log.startTime === 'string') {
+                    let [sh, , sp] = log.startTime.split(/:| /);
+                    startHour = parseInt(sh);
+                    startPeriod = sp || (log.startTime.includes('PM') ? 'PM' : 'AM');
+                }
+                if (typeof log.endTime === 'string') {
+                    let [eh, , ep] = log.endTime.split(/:| /);
+                    endHour = parseInt(eh);
+                    endPeriod = ep || (log.endTime.includes('PM') ? 'PM' : 'AM');
+                }
+                document.getElementById('startHour').value = startHour;
+                document.getElementById('endHour').value = endHour;
+                document.getElementById('startPeriod').innerText = startPeriod;
+                document.getElementById('endPeriod').innerText = endPeriod;
+                calculateDuration();
+                document.getElementById('remark1').value = log.remark1 || '';
+                document.getElementById('remark2').value = log.remark2 || '';
+                // Highlight selected buttons
+                document.getElementById('operatorGrid').querySelectorAll('button').forEach(btn => {
+                    btn.classList.toggle('selected', btn.innerText === log.operator);
+                });
+                document.getElementById('machineGrid').querySelectorAll('button').forEach(btn => {
+                    btn.classList.toggle('selected', btn.innerText === log.machine);
+                });
+                document.getElementById('operationGrid').querySelectorAll('button').forEach(btn => {
+                    btn.classList.toggle('selected', btn.innerText === log.operation);
+                });
+                // Change Save button to Edit, style it
+                const saveBtn = document.getElementById('save');
+                if (saveBtn) {
+                    saveBtn.innerText = 'Edit';
+                    saveBtn.style.background = '#1976d2';
+                    saveBtn.style.color = '#fff';
+                    saveBtn.onclick = function () {
+                        editLogAndReturn(parseInt(editIdx, 10));
+                    };
+                }
+            }
+        }
     }
 
     updateQty();
@@ -554,6 +611,39 @@ document.addEventListener('DOMContentLoaded', () => {
     reloadLists();
     loadFrequencyData();
 });
+
+// Edit log in localStorage and return to review page
+function editLogAndReturn(idx) {
+    if (!validateForm()) return;
+    const prefs = loadPrefs();
+    const key = `prodlog_entries_${prefs.date}_${prefs.shift}`;
+    let logs = [];
+    try { logs = JSON.parse(localStorage.getItem(key)) || []; } catch (e) { logs = []; }
+    const durationEl = document.getElementById('duration');
+    const duration = durationEl ? parseInt(durationEl.innerText) : 0;
+    const startTimeStr = `${String(startHour).padStart(2, '0')}:00 ${startPeriod}`;
+    const endTimeStr = `${String(endHour).padStart(2, '0')}:00 ${endPeriod}`;
+    const logData = {
+        date: document.getElementById('date').value,
+        shift: state.shift,
+        operator: state.operator,
+        machine: state.machine,
+        operation: state.operation,
+        qty: parseInt(document.getElementById('qtyInput').value),
+        jobCardNo: document.getElementById('jobCardNo').value,
+        srNo: document.getElementById('srNo').value ? parseInt(document.getElementById('srNo').value) : null,
+        description: document.getElementById('description').value,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+        duration: duration,
+        remark1: document.getElementById('remark1').value || '',
+        remark2: document.getElementById('remark2').value || ''
+    };
+    logs[idx] = logData;
+    localStorage.setItem(key, JSON.stringify(logs));
+    localStorage.removeItem('prodlog_edit_idx');
+    window.location.href = 'review.html';
+}
 
 
 

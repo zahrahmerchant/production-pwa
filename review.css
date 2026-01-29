@@ -1,0 +1,139 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #fafbfc;
+    margin: 0;
+    padding: 0;
+    font-size: 1.08rem;
+    color: #222;
+}
+
+.review-outer {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-card {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px #0002;
+    padding: 1.2em 1.2em 1em 1.2em;
+    margin-bottom: 1.2em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2 {
+    text-align: center;
+    margin-top: 0;
+    font-size: 2rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+table.review-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5em;
+    background: transparent;
+}
+
+table.review-table th,
+table.review-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+    font-size: 1.08rem;
+}
+
+table.review-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+table.review-table tr:last-child td {
+    border-bottom: none;
+}
+
+.edit-btn {
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    font-size: 1.08rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 7px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background: #125ea2;
+}
+
+.back-btn,
+.submit-btn {
+    background: #eee;
+    color: #222;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 1rem;
+}
+
+.submit-btn {
+    background: #388e3c;
+    color: #fff;
+}
+
+.submit-btn:hover {
+    background: #256b28;
+}
+
+.back-btn:hover {
+    background: #ccc;
+}
+
+.center {
+    text-align: center;
+}
+
+@media (max-width: 800px) {
+    .review-card {
+        max-width: 98vw;
+        padding: 0.7em;
+    }
+
+    table.review-table th,
+    table.review-table td {
+        padding: 8px 4px;
+        font-size: 0.99em;
+    }
+}
+
+@media (max-width: 500px) {
+    .review-card {
+        padding: 0.3em;
+    }
+
+    table.review-table th,
+    table.review-table td {
+        padding: 6px 2px;
+        font-size: 0.96em;
+    }
+
+    .back-btn,
+    .submit-btn {
+        padding: 8px 10px;
+        font-size: 0.98em;
+    }
+}

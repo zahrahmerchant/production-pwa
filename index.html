@@ -10,7 +10,10 @@
 </head>
 
 <body>
-    <h2>Daily Production Log</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1em;">
+        <h2 style="margin:0;">Daily Production Log</h2>
+        <a href="review.html"><button class="review-btn" style="padding:8px 18px;">Go to Review Page</button></a>
+    </div>
 
     <!-- DATE & SHIFT -->
     <section>
@@ -129,6 +132,8 @@
     </div>
 
     <!-- SERVICE WORKER REGISTRATION -->
+    <!-- <script>window.__API_BASE__ = 'https://unpulleyed-brook-gooselike.ngrok-free.dev'</script> -->
+
     <script>window.__API_BASE__ = 'https://unpulleyed-brook-gooselike.ngrok-free.dev'</script>
     <script src="app.js"></script>
     <script>

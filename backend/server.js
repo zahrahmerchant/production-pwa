@@ -45,6 +45,50 @@ console.log('Database initialized at:', dbPath);
 
 // ============= API ENDPOINTS =============
 
+// POST /api/logs/batch: Accepts { logs: [...] } and inserts into SQLite logs table
+app.post('/api/logs/batch', (req, res) => {
+    const logs = req.body.logs;
+    if (!Array.isArray(logs)) {
+        return res.status(400).json({ success: false, error: 'Missing or invalid logs array' });
+    }
+    const stmt = db.prepare(`
+        INSERT INTO logs (id, date, shift, operator, machine, operation, qty, jobCardNo, srNo, description, startTime, endTime, duration, remark1, remark2)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    let inserted = 0;
+    const errors = [];
+    for (const log of logs) {
+        try {
+            // Generate a unique id for each log if not present
+            const id = log.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            stmt.run(
+                id,
+                log.date,
+                log.shift,
+                log.operator,
+                log.machine,
+                log.operation,
+                log.qty,
+                log.jobCardNo,
+                log.srNo || null,
+                log.description,
+                log.startTime || null,
+                log.endTime || null,
+                log.duration,
+                log.remark1 || null,
+                log.remark2 || null
+            );
+            inserted++;
+        } catch (e) {
+            errors.push({ log, error: e.message });
+        }
+    }
+    if (errors.length) {
+        return res.status(500).json({ success: false, inserted, errors });
+    }
+    res.json({ success: true, inserted });
+});
+
 // POST /api/logs - Save a new log entry
 app.post('/api/logs', (req, res) => {
     try {
