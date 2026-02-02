@@ -134,6 +134,12 @@
         "Turn Mill",
         "Press Cutting",
         "Circular Sawing",
-        "Abrassive Cutting"
+        "Abrassive Cutting",
+        "Polishing",
+        "Laser Welding",
+        "Tig Welding",
+        "Mig Welding",
+        "Arc Welding",
+        "Honing"
     ]
 }
