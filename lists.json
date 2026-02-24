@@ -123,17 +123,6 @@
         "Plasma Cutting",
         "Tapping",
         "Setup",
-        "Packing",
-        "Bandsaw Cutting",
-        "Deburring",
-        "Parting",
-        "Chamfering",
-        "Shearing",
-        "Punching",
-        "Gas Cutting",
-        "Turn Mill",
-        "Press Cutting",
-        "Circular Sawing",
-        "Abrassive Cutting"
+        "Packing"
     ]
 }
