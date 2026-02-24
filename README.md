@@ -49,22 +49,8 @@ Edit `lists.json` to update operators/machines/operations. The app auto-loads on
 
 ## Production Deployment
 
-### Fastest: Vercel
-```bash
-npm install -g vercel
-vercel
-```
-
-### Easy: Netlify
-1. Push to GitHub
-2. Connect repo at netlify.com
-3. Auto-deploys with HTTPS
-
-### Self-hosted: Firebase
-```bash
-firebase init hosting
-firebase deploy
-```
+### LAN Hosting (Recommended)
+See `README (LAN HOSTING).md` for the complete on-site setup.
 
 ## Key Files
 

@@ -84,9 +84,7 @@ function submitAllLogs() {
     const btn = document.getElementById('submitAllBtn');
     if (btn) btn.disabled = true;
     // Use the same API base as the main app
-    // Set your ngrok tunnel URL here for production
-    const NGROK_URL = 'https://unpulleyed-brook-gooselike.ngrok-free.dev'; // TODO: Replace with your actual ngrok URL
-    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : NGROK_URL);
+    const API_BASE = window.__API_BASE__ || '';
     const backendUrl = API_BASE ? `${API_BASE}/api/logs/batch` : '/api/logs/batch';
     fetch(backendUrl, {
         method: 'POST',
@@ -110,6 +108,9 @@ function submitAllLogs() {
                     const key = `prodlog_entries_${prefs.date}_${prefs.shift}`;
                     localStorage.removeItem(key);
                 }
+                // Clear saved prefs so next open defaults to today's date/shift unset
+                localStorage.removeItem('prodlog_prefs');
+                localStorage.removeItem('prodlog_edit_idx');
                 alert('✓ All logs submitted successfully!');
                 renderLogs();
             } else {

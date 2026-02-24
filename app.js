@@ -298,9 +298,7 @@ function reloadLists() {
 }
 
 function loadFrequencyData() {
-    // Set your ngrok tunnel URL here for production
-    const NGROK_URL = 'https://unpulleyed-brook-gooselike.ngrok-free.dev'; // TODO: Replace with your actual ngrok URL
-    const API_BASE = window.__API_BASE__ || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : NGROK_URL);
+    const API_BASE = window.__API_BASE__ || '';
     const backendUrl = API_BASE ? `${API_BASE}/api/frequency` : '/api/frequency';
 
     fetch(backendUrl)

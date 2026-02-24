@@ -12,10 +12,24 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+
+// CORS configuration
+// Set ALLOWED_ORIGINS env var to a comma-separated list, e.g.
+// https://production-log.lan,http://production-log.lan
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : [
+        'https://production-log.lan',
+        'http://production-log.lan'
+    ]
+}));
 
 // Initialize SQLite database
-const dbPath = path.join(__dirname, 'production-logs.db');
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'production-logs.db');
 const db = new Database(dbPath);
 
 // Create table if it doesn't exist
