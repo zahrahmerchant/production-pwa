@@ -123,6 +123,23 @@
         "Plasma Cutting",
         "Tapping",
         "Setup",
-        "Packing"
+        "Packing",
+        "Bandsaw Cutting",
+        "Deburring",
+        "Parting",
+        "Chamfering",
+        "Shearing",
+        "Punching",
+        "Gas Cutting",
+        "Turn Mill",
+        "Press Cutting",
+        "Circular Sawing",
+        "Abrassive Cutting",
+        "Polishing",
+        "Laser Welding",
+        "Tig Welding",
+        "Mig Welding",
+        "Arc Welding",
+        "Honing"
     ]
 }
