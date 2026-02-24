@@ -81,41 +81,69 @@ function deleteLog(idx) {
 function submitAllLogs() {
     const logs = getCurrentLogs();
     if (!logs.length) return;
+
     const btn = document.getElementById('submitAllBtn');
     if (btn) btn.disabled = true;
-    // Use the same API base as the main app
+
+    // Default to same-origin API. __API_BASE__ can override when needed.
     const API_BASE = window.__API_BASE__ || '';
     const backendUrl = API_BASE ? `${API_BASE}/api/logs/batch` : '/api/logs/batch';
+
     fetch(backendUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ logs })
     })
         .then(async r => {
-            let result;
-            let text = await r.text();
-            try {
-                result = JSON.parse(text);
-            } catch (e) {
-                // Not JSON, show raw response
-                alert('Server returned non-JSON response:\n' + text);
-                throw new Error('Non-JSON response');
+            const text = await r.text();
+
+            if (!r.ok) {
+                let message = `HTTP ${r.status}`;
+                if (text) message += `: ${text}`;
+                throw new Error(message);
             }
-            if (result.success) {
-                // Remove logs from localStorage
-                const prefs = getCurrentPrefs();
-                if (prefs && prefs.date && prefs.shift) {
-                    const key = `prodlog_entries_${prefs.date}_${prefs.shift}`;
-                    localStorage.removeItem(key);
+
+            // Some proxies/backends return 204 on success.
+            if (r.status === 204) {
+                return { success: true, inserted: logs.length, noContent: true };
+            }
+
+            let result = null;
+            if (text) {
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Server returned invalid JSON (HTTP ${r.status})`);
                 }
-                // Clear saved prefs so next open defaults to today's date/shift unset
-                localStorage.removeItem('prodlog_prefs');
-                localStorage.removeItem('prodlog_edit_idx');
-                alert('✓ All logs submitted successfully!');
-                renderLogs();
             } else {
-                alert('Error: ' + (result.error || JSON.stringify(result)));
+                result = { success: true, inserted: logs.length, emptyBody: true };
             }
+
+            if (result && result.success) {
+                return result;
+            }
+
+            throw new Error(result && result.error ? result.error : 'Server did not confirm success');
+        })
+        .then(result => {
+            // Remove logs from localStorage only after confirmed success.
+            const prefs = getCurrentPrefs();
+            if (prefs && prefs.date && prefs.shift) {
+                const key = `prodlog_entries_${prefs.date}_${prefs.shift}`;
+                localStorage.removeItem(key);
+            }
+
+            // Clear saved prefs so next open defaults to today's date/shift unset
+            localStorage.removeItem('prodlog_prefs');
+            localStorage.removeItem('prodlog_edit_idx');
+
+            if (result.noContent) {
+                alert('All logs submitted successfully (server returned 204 No Content).');
+            } else {
+                alert('All logs submitted successfully.');
+            }
+
+            renderLogs();
         })
         .catch(err => {
             alert('Could not submit logs: ' + err.message);

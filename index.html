@@ -135,7 +135,7 @@
     </div>
 
     <!-- SERVICE WORKER REGISTRATION -->
-    <script>window.__API_BASE__ = 'https://production-log.lan'</script>
+    <script>window.__API_BASE__ = window.__API_BASE__ || '';</script>
     <script src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

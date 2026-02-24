@@ -21,12 +21,27 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
     .map(s => s.trim())
     .filter(Boolean);
 
-app.use(cors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : [
-        'https://production-log.lan',
-        'http://production-log.lan'
-    ]
-}));
+const defaultOrigins = [
+    'https://production-log.lan',
+    'http://production-log.lan',
+    'https://sew-prod-log.netlify.app'
+];
+
+const corsOrigins = allowedOrigins.length > 0 ? allowedOrigins : defaultOrigins;
+
+const corsOptions = {
+    origin(origin, callback) {
+        // Allow non-browser tools (curl/postman/server-side calls) with no Origin header.
+        if (!origin) return callback(null, true);
+        if (corsOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Initialize SQLite database
 const dbPath = process.env.DB_PATH || path.join(__dirname, 'production-logs.db');
