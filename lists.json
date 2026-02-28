@@ -107,7 +107,9 @@
         "Iron Work 1",
         "Iron Work 2",
         "Mazak E1600V",
-        "Packing"
+        "Packing",
+        "Laser-3",
+        "Easy Cat"
     ],
     "operations": [
         "Milling",
